@@ -75,18 +75,31 @@ conn = sqlite3.connect('vinos.db')
 reporte_3.to_sql('reporte_3_conteo_categoria', conn, if_exists='replace', index=False)
 conn.close()
 
-# Exportar Reporte 4 a JSON
-reporte_4.to_json('reporte_4_vinos_precio_alto.json', orient='records', lines=True)
+from pymongo import MongoClient
 
-print("\nReportes exportados exitosamente.")
+# Paso 5.1: Exportar Reporte 4 a MongoDB
+def exportar_a_mongodb(dataframe, nombre_coleccion):
+    # Conectar a MongoDB
+    cliente = MongoClient('mongodb+srv://Nallely:nallely@cluster0.8rpre.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')  
+    db = cliente['reporte4']  
+    coleccion = db[nombre_coleccion]
+
+    # Convertir DataFrame a diccionario y insertar en la colección
+    datos_dict = dataframe.to_dict('records')
+    coleccion.insert_many(datos_dict)
+
+    print(f"\nReporte 4 exportado a MongoDB en la colección: {reporte_4}")
+
+# Llamar a la función para exportar el Reporte 4
+exportar_a_mongodb(reporte_4[['bodega', 'pais', 'puntuacion', 'precio']], 'reporte_4_vinos_precio_alto')
 
 # Paso 6: Enviar el Reporte 1 por correo
 def enviar_correo(reporte_path, destinatario):
     # Configurar el servidor SMTP
     smtp_server = 'smtp.gmail.com'  # Cambiar si uso otro servidor
     smtp_port = 587
-    sender_email = 'nallelyparedes6@gmail.com'  #dirección de correo
-    sender_password = '----'  #contraseña
+    sender_email = 'correo@gmail.com'  #dirección de correo
+    sender_password = 'contraseña'  #contraseña
 
     # Crear el mensaje
     mensaje = MIMEMultipart()
@@ -117,7 +130,7 @@ def enviar_correo(reporte_path, destinatario):
         print(f"\nError al enviar el correo: {e}")
 
 # Llamar a la función para enviar el correo con el Reporte 1
-enviar_correo('reporte_1_vinos_mejor_puntuados_por_continente.csv', 'alonsopaco2022@gmail.com')
+enviar_correo('reporte_1_vinos_mejor_puntuados_por_continente.csv', 'destinatario@gmail.com')
 
 
 
